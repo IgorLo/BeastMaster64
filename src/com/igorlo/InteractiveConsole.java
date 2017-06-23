@@ -5,8 +5,6 @@ import com.igorlo.Elements.Player;
 
 import java.util.Scanner;
 
-import static java.lang.Thread.sleep;
-
 public class InteractiveConsole {
 
     private Player player;
@@ -22,6 +20,8 @@ public class InteractiveConsole {
     }
 
     public void startConversation() {
+
+
         say("Тип местности: " + dislocation.getName());
         emptyLine();
 
@@ -34,22 +34,22 @@ public class InteractiveConsole {
         emptyLine();
         say(String.format("И всё же, что ты собираешься делать, %s?", player.getName()));
 
-        String choose = prey.next();
+        String choose = prey.next().toLowerCase();
         emptyLine();
         switch (choose) {
-            case "Отдохнуть":
+            case "отдохнуть":
                 takeANap();
                 break;
-            case "Искать сокровище":
+            case "искать сокровище":
                // lookForTreassure();
                 break;
-            case "Осмотреться":
-                //takeALook();
+            case "осмотреться":
+                takeALook();
                 break;
-            case "Суицид":
+            case "суицид":
                 suicide();
                 break;
-            case "Идти":
+            case "идти":
                 if (dislocation.isDiscovered()){}
                     //goTo();
                 else
@@ -68,15 +68,29 @@ public class InteractiveConsole {
                 break;
         }
 
-        /*
-        if (dislocation.getDangerLvl() == 0){
-            say("Это место кажется действительно безопасным.");
-        } else {
-            say("Будь аккуратнее, путник. Некоторые твои решения");
-            say("могут привести к неприятным последствиям.");
-        }
-        */
 
+    }
+
+    private void takeALook() {
+        say("Ты находишь высокое место, чтобы хорошенько");
+        say("осмотреть местность.");
+        emptyLine();
+        say("Кажется, ты видишь несколько троп ведущих к");
+        say("соседним территориям...");
+        final int newDangerLvl = 2;
+        say(String.valueOf(newDangerLvl));
+        dislocation.discover(newDangerLvl);
+        emptyLine();
+        say("Да, определённо.");
+        sleep(100);
+        say("Вот места, которые ты увидел отсюда:");
+        say("*****");
+        int count = 0;
+        for (Dislocation dis: dislocation.getVariants()) {
+            count ++;
+            say("(" + count + ") " + dis.getName());
+        }
+        say("*****");
     }
 
     private void suicide() {
@@ -131,11 +145,11 @@ public class InteractiveConsole {
 
     private void avalableMoves(){
         say("Ваши действия:");
+        say(moves[0]);
         say(moves[1]);
         say(moves[2]);
         say(moves[3]);
-        say(moves[4]);
-        if (dislocation.isDiscovered()) say(moves[5]);
+        if (dislocation.isDiscovered()) say(moves[4]);
     }
 
     private String getMove(int index){

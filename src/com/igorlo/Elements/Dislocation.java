@@ -1,10 +1,13 @@
 package com.igorlo.Elements;
 
+import com.igorlo.Utilities;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class Dislocation {
 
+    public static final int MAX_DANGERLEVEL = 2;
     private static final DislocationType[] POSSIBLE_TYPES = DislocationType.values();
     private final DislocationType type;
     private final Treasure treasure;
@@ -22,7 +25,7 @@ public class Dislocation {
 
     public static Dislocation generate(int highestDanger) {
         DislocationType type;
-        do type = randomType();
+        do {type = randomType();}
         while (type.dangerLevel > highestDanger);
 
         Treasure treasure = Treasure.generate(type.treasureness);
@@ -33,7 +36,7 @@ public class Dislocation {
     }
 
     private static DislocationType randomType(){
-        int randomIndex = (int) ((Math.random() * POSSIBLE_TYPES.length) - 1);
+        final int randomIndex = Utilities.random(0, 2);
         return POSSIBLE_TYPES[randomIndex];
     }
 
@@ -51,6 +54,18 @@ public class Dislocation {
 
     public boolean isDiscovered() {
         return isDiscovered;
+    }
+
+    public List<Dislocation> getVariants() {
+        return variants;
+    }
+
+    public void discover(int highestDanger) {
+        final int numberOfLocations = Utilities.random(3, 8);
+        for (int i = 1; i <= numberOfLocations; i++){
+            variants.add(generate(highestDanger));
+        }
+        isDiscovered = true;
     }
 
     public enum DislocationType {
