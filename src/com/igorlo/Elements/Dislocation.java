@@ -13,18 +13,22 @@ public class Dislocation {
     private final Treasure treasure;
     private final Monster monster;
     private final List<Dislocation> variants;
+    private final Dislocation cameFrom;
     private boolean isDiscovered = false;
     private boolean justArrived = true;
+    private boolean isStartingPoint = false;
 
     public Dislocation(DislocationType type, Treasure treasure,
-                       Monster monster, List<Dislocation> variants) {
+                       Monster monster, List<Dislocation> variants,
+                       Dislocation cameFrom) {
         this.type = type;
         this.treasure = treasure;
         this.variants = variants;
         this.monster = monster;
+        this.cameFrom = cameFrom;
     }
 
-    public static Dislocation generate(int highestDanger) {
+    public static Dislocation generate(int highestDanger, Dislocation cameFrom) {
         DislocationType type;
         do {type = randomType();}
         while (type.dangerLevel > highestDanger);
@@ -33,7 +37,7 @@ public class Dislocation {
         List<Dislocation> variants = new ArrayList<>();
         Monster monster = Monster.generate(type.dangerLevel);
 
-        return new Dislocation(type, treasure, monster, variants);
+        return new Dislocation(type, treasure, monster, variants, cameFrom);
     }
 
     private static DislocationType randomType(){
@@ -57,6 +61,10 @@ public class Dislocation {
         return justArrived;
     }
 
+    public void setJustArrived() {
+        this.justArrived = true;
+    }
+
     public void notForTheFirstTime(){
         justArrived = false;
     }
@@ -73,10 +81,22 @@ public class Dislocation {
         return variants;
     }
 
-    public void discover(int highestDanger) {
+    public Dislocation getCameFrom() {
+        return cameFrom;
+    }
+
+    public boolean isStartingPoint() {
+        return isStartingPoint;
+    }
+
+    public void setStartingPoint() {
+        isStartingPoint = true;
+    }
+
+    public void discover(int highestDanger, Dislocation cameFrom) {
         final int numberOfLocations = Utilities.random(3, 8);
         for (int i = 1; i <= numberOfLocations; i++){
-            variants.add(generate(highestDanger));
+            variants.add(generate(highestDanger, cameFrom));
         }
         isDiscovered = true;
     }

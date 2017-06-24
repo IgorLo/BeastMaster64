@@ -11,10 +11,11 @@ public class InteractiveConsole {
     private Dislocation dislocation;
     private short consoleState = 0;
     private final String[] moves = new String[]{"Отдохнуть", "Искать сокровище", "Осмотреться", "Суицид", "Идти"};
-    private final Scanner prey = new Scanner(System.in);
+    private final Scanner pray = new Scanner(System.in);
 
     public InteractiveConsole(){
-        dislocation = Dislocation.generate(0);
+        dislocation = Dislocation.generate(0, null);
+        dislocation.setStartingPoint();
     }
 
     public void conversate() {
@@ -28,7 +29,7 @@ public class InteractiveConsole {
             avalableMoves();
             emptyLine();
 
-            String choose = prey.next().toLowerCase();
+            String choose = pray.next().toLowerCase();
             emptyLine();
             switch (choose) {
                 case "отдохнуть":
@@ -89,7 +90,7 @@ public class InteractiveConsole {
         say("скажите \"НЕТ\" чтобы вернуться");
         say("скажите что угодно, чтобы отправится");
         emptyLine();
-        String shouldIGo = prey.next().toLowerCase();
+        String shouldIGo = pray.next().toLowerCase();
         if (shouldIGo.toLowerCase().equals("нет")) return true;
 
         emptyLine();
@@ -103,7 +104,7 @@ public class InteractiveConsole {
                 say("Попробуй ввести цифру ещё раз: ");
             }
             isCorrect = true;
-            String choose = prey.next();
+            String choose = pray.next();
 
             if (choose.length() == 0) isCorrect = false;
             for (int i = 0; i < choose.length(); i++){
@@ -112,12 +113,23 @@ public class InteractiveConsole {
             int index = -1;
             if (isCorrect) index = Integer.parseInt(choose);
             if (dislocation.numberOfVariants() < index || index < 1) isCorrect = false;
+            if (!dislocation.isStartingPoint() && choose.equals("0")) {
+                travelTo(dislocation.getCameFrom());
+                return true;
+            }
             if (isCorrect) {
-                dislocation = dislocation.getVariants().get(index - 1);
+                travelTo(dislocation.getVariants().get(index - 1));
+                if (!player.isTraveled()) player.setTraveled();
                 gone = true;
             }
         } while (!gone);
 
+        return true;
+    }
+
+    private void travelTo(Dislocation newLocation){
+        dislocation = newLocation;
+        dislocation.setJustArrived();
         emptyLine();
         say("Путешествуем...");
         for (int i = 1; i <= 10; i++){
@@ -127,8 +139,7 @@ public class InteractiveConsole {
         sleep(200);
         emptyLine();
         say("Ты прибыл на новую территорию.");
-        return true;
-    }
+    };
 
     private void alreadyFullHealed() {
         say("Твоё здоровье и так в полном порядке, " + player.getName() + ".");
@@ -152,7 +163,7 @@ public class InteractiveConsole {
 
     private void startNewGame() {
         System.out.print("Enter your name, traveller: ");
-        String name = prey.next();
+        String name = pray.next();
 
         emptyLine();
 
@@ -180,7 +191,7 @@ public class InteractiveConsole {
         say("Кажется, ты видишь несколько троп ведущих к");
         say("соседним территориям...");
         final int newDangerLvl = 2;
-        dislocation.discover(newDangerLvl);
+        dislocation.discover(newDangerLvl, dislocation);
         emptyLine();
         say("Да, определённо.");
         sleep(100);
@@ -188,9 +199,13 @@ public class InteractiveConsole {
     }
 
     private void variantsYouKnow() {
-        say("Вот места, которые ты увидел отсюда:");
+        say("Вот места, куда ты можешь отправиться:");
         say("*****");
         int count = 0;
+        if (!dislocation.isStartingPoint()) {
+            say("(0) В предыдущую местность (" + dislocation.getCameFrom().getName() + ")");
+            say("-----");
+        }
         for (Dislocation dis: dislocation.getVariants()) {
             count ++;
             say("(" + count + ") " + dis.getName());
@@ -219,7 +234,7 @@ public class InteractiveConsole {
         say("свои силы. Твоё здоровье постепенно растёт,");
         say("а негативные эффекты сходят на нет.");
         emptyLine();
-        say(String.format("Спи сладко, %s", player.getName()));
+        say(String.format("Спи сладко, %s.", player.getName()));
 
         final int hpHealed =  4 + (int) (Math.random()*6);
         for (int i = 0; i < hpHealed; i++){
