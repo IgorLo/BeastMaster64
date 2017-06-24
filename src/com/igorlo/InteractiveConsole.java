@@ -1,8 +1,11 @@
 package com.igorlo;
 
+import com.igorlo.Elements.Character;
 import com.igorlo.Elements.Dislocation;
 import com.igorlo.Elements.Player;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class InteractiveConsole {
@@ -13,62 +16,154 @@ public class InteractiveConsole {
     private final String[] moves = new String[]{"Отдохнуть", "Искать сокровище", "Осмотреться", "Суицид", "Идти"};
     private final Scanner prey = new Scanner(System.in);
 
-    public InteractiveConsole(Player plr){
-        this.player = plr;
+    public InteractiveConsole(){
         dislocation = Dislocation.generate(0);
-        consoleState = 1;
     }
 
-    public void startConversation() {
+    public void conversate() {
 
+        startNewGame();
 
-        say("Тип местности: " + dislocation.getName());
-        emptyLine();
+        while (consoleState == 1){
 
-        say("Описание: " + dislocation.getDescription());
-        emptyLine();
-        avalableMoves();
-        emptyLine();
-        say("Будь аккуратнее, путник. Некоторые твои решения");
-        say("могут привести к неприятным последствиям.");
-        emptyLine();
-        say(String.format("И всё же, что ты собираешься делать, %s?", player.getName()));
+            if (dislocation.isJustArrived()) aboutLocation();
+            emptyLine();
+            avalableMoves();
+            emptyLine();
 
-        String choose = prey.next().toLowerCase();
-        emptyLine();
-        switch (choose) {
-            case "отдохнуть":
-                takeANap();
-                break;
-            case "искать сокровище":
-               // lookForTreassure();
-                break;
-            case "осмотреться":
-                takeALook();
-                break;
-            case "суицид":
-                suicide();
-                break;
-            case "идти":
-                if (dislocation.isDiscovered()){}
-                    //goTo();
-                else
-                    say("Пока что ты не знаешь, куда ты можешь пойти");
-                    emptyLine();
-                    say("Может быть, стоит осмотреться?");
-                break;
-            default:
-                say("И что ты думаешь должно произойти?");
-                emptyLine();
-                say("Я должен понять то, что ты написал?");
-                emptyLine();
-                say("Я что по-твоему, нейросеть?");
-                emptyLine();
-                say(String.format("Попробуй ка ещё раз, %s.", player.getName()));
-                break;
+            String choose = prey.next().toLowerCase();
+            emptyLine();
+            switch (choose) {
+                case "отдохнуть":
+                    if (player.isHealed()) alreadyFullHealed();
+                    else takeANap();
+                    break;
+                case "искать сокровище":
+                    // lookForTreassure();
+                    break;
+                case "осмотреться":
+                    if (!dislocation.isDiscovered()) takeALook();
+                    else variantsYouKnow();
+                    break;
+                case "суицид":
+                    suicide();
+                    break;
+                case "идти":
+                    if (dislocation.isDiscovered()) goTo();
+                    else notDiscoveredYet();
+                    break;
+                default:
+                    commandUnknown();
+                    break;
+            }
+        }
+
+        if (consoleState == 2){
+            say("Вы мертвы.");
+            sleep(500);
+            emptyLine();
+            sleep(500);
+            say("На этом ваше путешествие закончилось");
+            sleep(500);
+            emptyLine();
+            sleep(500);
+            say("КОНЕЦ ИГРЫ.");
         }
 
 
+    }
+
+    private void aboutLocation() {
+        emptyLine();
+        say("Тип местности: " + dislocation.getName());
+        emptyLine();
+        say("Описание: " + dislocation.getDescription());
+        dislocation.notForTheFirstTime();
+    }
+
+    private boolean goTo() {
+        say("Вы уверены, что хотите отправится в путь?");
+        say("скажите \"НЕТ\" чтобы вернуться");
+        say("скажите что угодно, чтобы отправится");
+        String shouldIGo = prey.next().toLowerCase();
+        if (shouldIGo.toLowerCase().equals("нет")) return true;
+
+        emptyLine();
+        say("Цифрой выбери дорогу, которой хочешь пойти:");
+        variantsYouKnow();
+        boolean gone = false;
+        boolean isCorrect = true;
+        do {
+            if (!isCorrect){
+                say("Попробуй ввести цифру ещё раз: ");
+            }
+            isCorrect = true;
+            String choose = prey.next();
+
+            if (choose.length() == 0) isCorrect = false;
+            for (int i = 0; i < choose.length(); i++){
+                if (!java.lang.Character.isDigit(choose.charAt(i))) isCorrect = false;
+            }
+            int index = -1;
+            if (isCorrect) index = Integer.parseInt(choose);
+            if (dislocation.numberOfVariants() < index || index < 1) isCorrect = false;
+            if (isCorrect) {
+                dislocation = dislocation.getVariants().get(index - 1);
+                gone = true;
+            }
+        } while (!gone);
+
+        emptyLine();
+        say("Путешествуем...");
+        for (int i = 0; i <= 10; i++){
+            say("Путь пройден: " + i*10 + "%");
+        }
+        emptyLine();
+        say("Ты прибыл на новую территорию.");
+        return true;
+    }
+
+    private void alreadyFullHealed() {
+        say("Твоё здоровье и так в полном порядке, " + player.getName() + ".");
+    }
+
+    private void notDiscoveredYet() {
+        say("Пока что ты не знаешь, куда ты можешь пойти");
+        emptyLine();
+        say("Может быть, стоит осмотреться?");
+    }
+
+    private void commandUnknown() {
+        say("И что ты думаешь должно произойти?");
+        emptyLine();
+        say("Я должен понять то, что ты написал?");
+        emptyLine();
+        say("Я что по-твоему, нейросеть?");
+        emptyLine();
+        say(String.format("Попробуй ка ещё раз, %s.", player.getName()));
+    }
+
+    private void startNewGame() {
+        System.out.print("Enter your name, traveller: ");
+        String name = prey.next();
+
+        emptyLine();
+
+        int startStrenght = 10;
+        int startAgility = 10;
+        int startIntelligence = 1;
+
+        System.out.println("Player \"" + name + "\" created.");
+        System.out.println("Your Stats: " + startStrenght + " \\ " + startAgility + " \\ " + startIntelligence);
+        System.out.println("Your health: " + startStrenght*6 + " \\ " + startStrenght*6);
+
+        player = Player.createCharacter(name, startStrenght, startAgility, startIntelligence);
+
+        emptyLine();
+        say("Будь аккуратнее, путник. Некоторые твои решения");
+        say("могут привести к неприятным последствиям.");
+
+        consoleState = 1;
     }
 
     private void takeALook() {
@@ -78,11 +173,14 @@ public class InteractiveConsole {
         say("Кажется, ты видишь несколько троп ведущих к");
         say("соседним территориям...");
         final int newDangerLvl = 2;
-        say(String.valueOf(newDangerLvl));
         dislocation.discover(newDangerLvl);
         emptyLine();
         say("Да, определённо.");
         sleep(100);
+        variantsYouKnow();
+    }
+
+    private void variantsYouKnow() {
         say("Вот места, которые ты увидел отсюда:");
         say("*****");
         int count = 0;
@@ -109,8 +207,7 @@ public class InteractiveConsole {
         say("Ты чё, дурак?");
         sleep(1200);
         say("Player " + player.getName() + " suicided. What an idiot.");
-        say("GAME OVER");
-
+        consoleState = 2;
     }
 
 
@@ -152,9 +249,6 @@ public class InteractiveConsole {
         if (dislocation.isDiscovered()) say(moves[4]);
     }
 
-    private String getMove(int index){
-        return moves[index];
-    }
 
     private void sleep(int time){
         try {

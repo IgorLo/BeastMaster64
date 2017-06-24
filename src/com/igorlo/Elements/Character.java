@@ -56,6 +56,11 @@ public class Character {
 
     public int getToughness(){ return strenght+agility; }
 
+    public boolean isHealed(){
+        if (curHealth == maxHealth) return true;
+        return false;
+    }
+
     public void dealDamage(int dmg){
         if (dmg < curHealth)
             curHealth -= dmg;

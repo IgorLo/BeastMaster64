@@ -14,6 +14,7 @@ public class Dislocation {
     private final Monster monster;
     private final List<Dislocation> variants;
     private boolean isDiscovered = false;
+    private boolean justArrived = true;
 
     public Dislocation(DislocationType type, Treasure treasure,
                        Monster monster, List<Dislocation> variants) {
@@ -40,12 +41,24 @@ public class Dislocation {
         return POSSIBLE_TYPES[randomIndex];
     }
 
+    public int numberOfVariants(){
+        return variants.size();
+    }
+
     public String getName(){
         return type.getName();
     }
 
     public String getDescription(){
         return type.getDescription();
+    }
+
+    public boolean isJustArrived() {
+        return justArrived;
+    }
+
+    public void notForTheFirstTime(){
+        justArrived = false;
     }
 
     public int getDangerLvl(){
