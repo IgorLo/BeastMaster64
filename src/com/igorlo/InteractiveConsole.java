@@ -1,11 +1,8 @@
 package com.igorlo;
 
-import com.igorlo.Elements.Character;
 import com.igorlo.Elements.Dislocation;
 import com.igorlo.Elements.Player;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 
 public class InteractiveConsole {
@@ -58,6 +55,12 @@ public class InteractiveConsole {
             }
         }
 
+
+        sleep(1200);
+        emptyLine();
+        emptyLine();
+        emptyLine();
+
         if (consoleState == 2){
             say("Вы мертвы.");
             sleep(500);
@@ -82,15 +85,17 @@ public class InteractiveConsole {
     }
 
     private boolean goTo() {
-        say("Вы уверены, что хотите отправится в путь?");
+        say("Вы уверены, что хотите отправиться в путь?");
         say("скажите \"НЕТ\" чтобы вернуться");
         say("скажите что угодно, чтобы отправится");
+        emptyLine();
         String shouldIGo = prey.next().toLowerCase();
         if (shouldIGo.toLowerCase().equals("нет")) return true;
 
         emptyLine();
         say("Цифрой выбери дорогу, которой хочешь пойти:");
         variantsYouKnow();
+        emptyLine();
         boolean gone = false;
         boolean isCorrect = true;
         do {
@@ -115,9 +120,11 @@ public class InteractiveConsole {
 
         emptyLine();
         say("Путешествуем...");
-        for (int i = 0; i <= 10; i++){
+        for (int i = 1; i <= 10; i++){
+            sleep(1400);
             say("Путь пройден: " + i*10 + "%");
         }
+        sleep(200);
         emptyLine();
         say("Ты прибыл на новую территорию.");
         return true;
@@ -202,11 +209,6 @@ public class InteractiveConsole {
         sleep(1200);
         say("Найдя спокойное уединённое место ты берёшь свой");
         say("короткий меч и вспарываешь собственный живот.");
-        emptyLine();
-        emptyLine();
-        say("Ты чё, дурак?");
-        sleep(1200);
-        say("Player " + player.getName() + " suicided. What an idiot.");
         consoleState = 2;
     }
 
