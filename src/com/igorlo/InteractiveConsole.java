@@ -2,7 +2,9 @@ package com.igorlo;
 
 import com.igorlo.Elements.Dislocation;
 import com.igorlo.Elements.Player;
+import com.igorlo.Events.Fight;
 
+import java.util.List;
 import java.util.Scanner;
 
 public class InteractiveConsole {
@@ -10,7 +12,7 @@ public class InteractiveConsole {
     private Player player;
     private Dislocation dislocation;
     private short consoleState = 0;
-    private final String[] moves = new String[]{"Отдохнуть", "Искать сокровище", "Осмотреться", "Суицид", "Идти"};
+    private final String[] moves = new String[]{"Отдохнуть", "Искать сокровище", "Осмотреться", "Идти"};
     private final Scanner pray = new Scanner(System.in);
 
     public InteractiveConsole(){
@@ -36,8 +38,8 @@ public class InteractiveConsole {
                     if (player.isHealed()) alreadyFullHealed();
                     else takeANap();
                     break;
-                case "искать сокровище":
-                    // lookForTreassure();
+                case "искать":
+                    lookForTreassure();
                     break;
                 case "осмотреться":
                     if (!dislocation.isDiscovered()) takeALook();
@@ -56,9 +58,7 @@ public class InteractiveConsole {
             }
         }
 
-
         sleep(1200);
-        emptyLine();
         emptyLine();
         emptyLine();
 
@@ -68,13 +68,102 @@ public class InteractiveConsole {
             emptyLine();
             sleep(500);
             say("На этом ваше путешествие закончилось");
-            sleep(500);
             emptyLine();
-            sleep(500);
+            statistics();
+            emptyLine();
             say("КОНЕЦ ИГРЫ.");
         }
 
 
+    }
+
+    private void statistics() {
+        say("Статистика игрока по имени " + player.getName());
+        emptyLine();
+
+        List<String> treassures = player.getTakenTreassures();
+        say("Сокровищ справедливо присвоено: " + treassures.size());
+        say("Среди которых были:");
+        for (String str: treassures) {
+            say(str + ",");
+        }
+        emptyLine();
+
+        List<String> monsters = player.getDefeatedMonsters();
+        say("Противников повержено: " + monsters.size());
+        say("Среди которых были:");
+        for (String str: monsters) {
+            say(str + ",");
+        }
+
+        whatIsMyMoney();
+    }
+
+    private void lookForTreassure() {
+        if (dislocation.getMonster() == null){
+            emptyLine();
+            if (dislocation.getTreasure() != null)
+                takeTreassure();
+            else
+                thereAreNoTreassure();
+        } else {
+            Fight fight = new Fight(player, dislocation.getMonster());
+            switch (fight.startFighting()) {
+                case 1:
+                    //Здесь игрок побеждает монстра и получает сокровище
+                    say("Могучий " + player.getName() + " на изичах победил противника по имени " +
+                            dislocation.getMonster().getName() + "!");
+                    emptyLine();
+                    takeTreassure();
+                    player = fight.getPlayer();
+                    player.killedMonster(dislocation.getMonster());
+                    dislocation.defeatMonster();
+                    break;
+                case 2:
+                    //Здесь игрок смог убежать от монстра, но не победил
+                    //его и не получил сокровища
+                    //Монстр при этом возвращается в исхожное состояние,
+                    //как будто боя и не было.
+                    player = fight.getPlayer();
+                    break;
+                case 0:
+                    //В данном случае игрок умер в сражении с монстром
+                    //Игра заканчивается
+                    player.kill();
+                    consoleState = 2;
+            }
+        }
+    }
+
+    private void thereAreNoTreassure() {
+        say("Вы не нашли сокровищ.");
+    }
+
+    private void takeTreassure() {
+        say("Перед вами старый, грязный сундук. Вы медленно");
+        say("его открываете и достаёте содержимое.");
+        emptyLine();
+        say("Хм...");
+        emptyLine();
+        say("Что же это?..");
+        emptyLine();
+        say("Вы оттираете грязь и обнаруживаете перед собой...");
+        sleep(500);
+        emptyLine();
+        sleep(500);
+        say("Вау!!!1!");
+        emptyLine();
+        say("Вы обнаружили: " + dislocation.getTreasure().getName());
+        sleep(800);
+        say("Ценность: " + dislocation.getTreasure().getMoney());
+        emptyLine();
+        say("Вы забираете сокровище себе.");
+        player.giveTreassure(dislocation.takeTreassure());
+        whatIsMyMoney();
+    }
+
+    private void whatIsMyMoney() {
+        say("В кошельке: " + player.getMoney());
     }
 
     private void aboutLocation() {
@@ -227,7 +316,6 @@ public class InteractiveConsole {
         consoleState = 2;
     }
 
-
     private void takeANap() {
         say("Ты нашёл относительно безопасное и спокойное");
         say("место, чтобы прилечь и немного восстановить");
@@ -248,6 +336,16 @@ public class InteractiveConsole {
         say("Ты неплохо отдохнул, %USERNAME%, но снова пора в путь.");
     }
 
+    private void avalableMoves(){
+        say("Ваши действия:");
+        say(moves[0]);
+        say(moves[1]);
+        say(moves[2]);
+        if (dislocation.isDiscovered()) say(moves[3]);
+    }
+
+
+
     private void emptyLine(){
         sleep(1000);
         System.out.println();
@@ -255,17 +353,8 @@ public class InteractiveConsole {
 
     private void say(String wordOfGod){
         System.out.println(wordOfGod);
+        sleep(50);
     }
-
-    private void avalableMoves(){
-        say("Ваши действия:");
-        say(moves[0]);
-        say(moves[1]);
-        say(moves[2]);
-        say(moves[3]);
-        if (dislocation.isDiscovered()) say(moves[4]);
-    }
-
 
     private void sleep(int time){
         try {
@@ -274,4 +363,5 @@ public class InteractiveConsole {
             e.printStackTrace();
         }
     }
+
 }

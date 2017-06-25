@@ -54,6 +54,11 @@ public class Character {
         return !isDead;
     }
 
+    public void kill(){
+        isDead = true;
+        curHealth = 0;
+    }
+
     public int getToughness(){ return strenght+agility; }
 
     public boolean isHealed(){

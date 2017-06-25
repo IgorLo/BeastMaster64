@@ -1,5 +1,7 @@
 package com.igorlo.Elements;
 
+import com.igorlo.Utilities;
+
 public class Monster extends Character {
 
     public Monster(String name, int strenght, int agility, int intelligence, int health, int maxHealth) {
@@ -8,11 +10,11 @@ public class Monster extends Character {
 
     public static Monster generate(int dangerLevel) {
         if (dangerLevel == 0) return null;
-        final int health = (int) Math.random()*5*dangerLevel;
+        final int health = Utilities.random(5, 10)*dangerLevel;
         return new Monster("MONSTER",
-                (int) Math.random()*2*dangerLevel,
-                (int) Math.random()*2*dangerLevel,
-                (int) Math.random()*2*dangerLevel,
+                Utilities.random(1, 5) * dangerLevel,
+                Utilities.random(1, 5) * dangerLevel,
+                Utilities.random(1, 5) * dangerLevel,
                 health, health);
     }
 }

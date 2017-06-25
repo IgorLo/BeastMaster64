@@ -10,8 +10,8 @@ public class Dislocation {
     public static final int MAX_DANGERLEVEL = 2;
     private static final DislocationType[] POSSIBLE_TYPES = DislocationType.values();
     private final DislocationType type;
-    private final Treasure treasure;
-    private final Monster monster;
+    private Treasure treasure;
+    private Monster monster;
     private final List<Dislocation> variants;
     private final Dislocation cameFrom;
     private boolean isDiscovered = false;
@@ -93,12 +93,34 @@ public class Dislocation {
         isStartingPoint = true;
     }
 
+    public Monster getMonster() {
+        return monster;
+    }
+
+    public void defeatMonster(){
+        monster = null;
+    }
+
+    public Treasure getTreasure() {
+        return treasure;
+    }
+
+    public void setTreasure(Treasure treasure) {
+        this.treasure = treasure;
+    }
+
     public void discover(int highestDanger, Dislocation cameFrom) {
-        final int numberOfLocations = Utilities.random(3, 8);
+        final int numberOfLocations = Utilities.random(1, 4);
         for (int i = 1; i <= numberOfLocations; i++){
             variants.add(generate(highestDanger, cameFrom));
         }
         isDiscovered = true;
+    }
+
+    public Treasure takeTreassure() {
+        Treasure taken = treasure;
+        setTreasure(null);
+        return taken;
     }
 
     public enum DislocationType {
