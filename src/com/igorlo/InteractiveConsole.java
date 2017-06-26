@@ -1,6 +1,7 @@
 package com.igorlo;
 
 import com.igorlo.Elements.Dislocation;
+import com.igorlo.Elements.Monster;
 import com.igorlo.Elements.Player;
 import com.igorlo.Events.Fight;
 
