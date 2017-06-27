@@ -13,7 +13,7 @@ public class InteractiveConsole {
     private Player player;
     private Dislocation dislocation;
     private short consoleState = 0;
-    private final String[] moves = new String[]{"Отдохнуть", "Искать сокровище", "Осмотреться", "Идти"};
+    private final String[] moves = new String[]{"Отдохнуть", "Исследовать локацию", "Осмотреться", "Путешествовать *№*"};
     private final Scanner pray = new Scanner(System.in);
 
     public InteractiveConsole(){
@@ -35,24 +35,30 @@ public class InteractiveConsole {
             String choose = pray.next().toLowerCase();
             emptyLine();
             switch (choose) {
+
                 case "отдохнуть":
                     if (player.isHealed()) alreadyFullHealed();
                     else takeANap();
                     break;
-                case "искать":
-                    lookForTreassure();
+
+                case "исследовать": case "обыскать": case "искать":
+                    lookForSomething();
                     break;
+
                 case "осмотреться":
                     if (!dislocation.isDiscovered()) takeALook();
                     else variantsYouKnow();
                     break;
-                case "суицид":
+
+                case "суицид": case "самоубийство": case "покончить":
                     suicide();
                     break;
-                case "идти":
+
+                case "путешествовать": case "идти": case "бежать":
                     if (dislocation.isDiscovered()) goTo();
                     else notDiscoveredYet();
                     break;
+
                 default:
                     commandUnknown();
                     break;
@@ -100,39 +106,70 @@ public class InteractiveConsole {
         whatIsMyMoney();
     }
 
+    private void lookForSomething(){
+        interractWithNpc();
+
+        boolean ableToGrabDatTreassure = true;
+        if (dislocation.getNpc() instanceof Monster && dislocation.getNpc().isAlive())
+            ableToGrabDatTreassure = false;
+
+        if (ableToGrabDatTreassure) lookForTreassure();
+    }
+
     private void lookForTreassure() {
-        if (dislocation.getMonster() == null){
-            emptyLine();
-            if (dislocation.getTreasure() != null)
-                takeTreassure();
-            else
-                thereAreNoTreassure();
-        } else {
-            Fight fight = new Fight(player, dislocation.getMonster());
-            switch (fight.startFighting()) {
-                case 1:
-                    //Здесь игрок побеждает монстра и получает сокровище
-                    say("Могучий " + player.getName() + " на изичах победил противника по имени " +
-                            dislocation.getMonster().getName() + "!");
-                    emptyLine();
-                    takeTreassure();
-                    player = fight.getPlayer();
-                    player.killedMonster(dislocation.getMonster());
-                    dislocation.defeatMonster();
-                    break;
-                case 2:
-                    //Здесь игрок смог убежать от монстра, но не победил
-                    //его и не получил сокровища
-                    //Монстр при этом возвращается в исхожное состояние,
-                    //как будто боя и не было.
-                    player = fight.getPlayer();
-                    break;
-                case 0:
-                    //В данном случае игрок умер в сражении с монстром
-                    //Игра заканчивается
-                    player.kill();
-                    consoleState = 2;
-            }
+        emptyLine();
+        if (dislocation.getTreasure() != null)
+            takeTreassure();
+        else
+            thereAreNoTreassure();
+    }
+
+    private boolean interractWithNpc() {
+
+        if (dislocation.getNpc().isDead()){
+            say("Вы нашли труп. Его имя было " + dislocation.getNpc().getName() + ".");
+            say("Покойся с миром, " + dislocation.getNpc().getName() + ".");
+            return true;
+        }
+
+        if (dislocation.getNpc() instanceof Monster) {
+            fightNpc();
+            return true;
+        }
+
+        return true;
+
+    }
+
+    private void fightNpc() {
+        Fight encounter = new Fight(player, dislocation.getNpc());
+
+        switch (encounter.startFighting()) {
+            case 1:
+                //Здесь игрок побеждает монстра и получает сокровище
+                say("Могучий " + player.getName() + " на изичах победил противника по имени " +
+                        dislocation.getNpc().getName() + "!");
+                emptyLine();
+                player = encounter.getPlayer();
+                player.killedMonster(dislocation.getNpc());
+                dislocation.defeatNpc();
+                break;
+            case 2:
+                //Здесь игрок смог убежать от монстра, но не победил
+                //его и не получил сокровища
+                //Монстр при этом возвращается в исхожное состояние,
+                //как будто боя и не было.
+                player = encounter.getPlayer();
+                break;
+            case 3:
+                //В этом случае игрок смог избежать боя и либо обошёл монстра,
+                //либо разрешил конфликт мирным путём
+                break;
+            case 0:
+                //В данном случае игрок умер в сражении с монстром
+                //Игра заканчивается
+                player.kill();
+                consoleState = 2;
         }
     }
 
@@ -176,27 +213,15 @@ public class InteractiveConsole {
     }
 
     private boolean goTo() {
-        say("Вы уверены, что хотите отправиться в путь?");
-        say("скажите \"НЕТ\" чтобы вернуться");
-        say("скажите что угодно, чтобы отправится");
-        emptyLine();
-        String shouldIGo = pray.next().toLowerCase();
-        if (shouldIGo.toLowerCase().equals("нет")) return true;
-
-        emptyLine();
-        say("Цифрой выбери дорогу, которой хочешь пойти:");
-        variantsYouKnow();
-        emptyLine();
         boolean gone = false;
         boolean isCorrect = true;
         do {
             if (!isCorrect){
-                say("Попробуй ввести цифру ещё раз: ");
+                say("Номер локации указан некорректно. Попробуй ещё раз: ");
             }
             isCorrect = true;
             String choose = pray.next();
 
-            if (choose.length() == 0) isCorrect = false;
             for (int i = 0; i < choose.length(); i++){
                 if (!java.lang.Character.isDigit(choose.charAt(i))) isCorrect = false;
             }
@@ -353,7 +378,11 @@ public class InteractiveConsole {
     }
 
     private void say(String wordOfGod){
-        System.out.println(wordOfGod);
+        for (int i = 0; i < wordOfGod.length(); i++){
+            System.out.print(wordOfGod.charAt(i));
+            sleep(20);
+        }
+        System.out.println();
         sleep(50);
     }
 

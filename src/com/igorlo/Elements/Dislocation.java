@@ -11,7 +11,7 @@ public class Dislocation {
     private static final DislocationType[] POSSIBLE_TYPES = DislocationType.values();
     private final DislocationType type;
     private Treasure treasure;
-    private Monster monster;
+    private NotAPlayer npc;
     private final List<Dislocation> variants;
     private final Dislocation cameFrom;
     private boolean isDiscovered = false;
@@ -24,7 +24,7 @@ public class Dislocation {
         this.type = type;
         this.treasure = treasure;
         this.variants = variants;
-        this.monster = monster;
+        this.npc = monster;
         this.cameFrom = cameFrom;
     }
 
@@ -93,12 +93,12 @@ public class Dislocation {
         isStartingPoint = true;
     }
 
-    public Monster getMonster() {
-        return monster;
+    public NotAPlayer getNpc() {
+        return npc;
     }
 
-    public void defeatMonster(){
-        monster = null;
+    public void defeatNpc(){
+        npc.kill();
     }
 
     public Treasure getTreasure() {

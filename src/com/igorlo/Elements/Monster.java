@@ -2,7 +2,7 @@ package com.igorlo.Elements;
 
 import com.igorlo.Utilities;
 
-public class Monster extends Character {
+public class Monster extends NotAPlayer {
 
     private static final String[] FIRSTNAME_FIRSTHALF = new String[]{"Ветро", "Древо", "Пещеро", "Стале", "Пиво",
                                                                     "Велико", "Старо", "Дубо", "Камне", "Чиче", "Михо",
