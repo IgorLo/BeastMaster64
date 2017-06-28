@@ -1,15 +1,16 @@
-package com.igorlo.Elements;
+package com.igorlo.Elements.NPCs;
 
+import com.igorlo.Elements.NotAPlayer;
 import com.igorlo.Utilities;
 
 public class Monster extends NotAPlayer {
 
     private static final String[] FIRSTNAME_FIRSTHALF = new String[]{"Ветро", "Древо", "Пещеро", "Стале", "Пиво",
                                                                     "Велико", "Старо", "Дубо", "Камне", "Чиче", "Михо",
-                                                                    "Евгено", "Данило", "Максимо", "Де"};
+                                                                    "Евгено", "Данило", "Максимо", "Де", "Само"};
 
     private static final String[] FIRSTNAME_SECONDHALF = new String[]{"крыл", "руб", "лаз", "вар", "ус",
-                                                                    "борец", "верец", "щит", "лом", "ил"};
+                                                                    "борец", "верец", "щит", "лом", "ил", "рез"};
 
     private static final String[] SECOND_NAME = new String[]{"Древний", "Славный", "Обжористый", "Непробиваемый",
                                                             "Щуплый", "Пустоголовый", "Прекрасный", "Дерзкий",
@@ -18,7 +19,8 @@ public class Monster extends NotAPlayer {
                                                             "Жванецкий", "Навальный", "Вульт"};
 
     private static final String[] AFTER_NAME = new String[]{"I", "II", "III", "VI", "из рода Ланистеров", "(особенный)",
-                                                            "Отчисленный", "(дырявый)", "умоляющий не есть его", "сын Марии"};
+                                                            "Отчисленный", "(дырявый)", "умоляющий не есть его", "сын Марии",
+                                                            "святой"};
 
     public Monster(String name, int strenght, int agility, int intelligence, int health, int maxHealth) {
         super(name, strenght, agility, intelligence, health, maxHealth);

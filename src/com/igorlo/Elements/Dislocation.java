@@ -1,5 +1,6 @@
 package com.igorlo.Elements;
 
+import com.igorlo.Elements.NPCs.Monster;
 import com.igorlo.Utilities;
 
 import java.util.ArrayList;

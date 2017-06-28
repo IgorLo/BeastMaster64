@@ -1,7 +1,7 @@
 package com.igorlo;
 
 import com.igorlo.Elements.Dislocation;
-import com.igorlo.Elements.Monster;
+import com.igorlo.Elements.NPCs.Monster;
 import com.igorlo.Elements.Player;
 import com.igorlo.Events.Fight;
 
@@ -13,10 +13,17 @@ public class InteractiveConsole {
     private Player player;
     private Dislocation dislocation;
     private short consoleState = 0;
-    private final String[] moves = new String[]{"Отдохнуть", "Исследовать локацию", "Осмотреться", "Путешествовать *№*"};
+    private final String[] moves = new String[]{"Отдохнуть", "Исследовать локацию", "Осмотреться", "Путешествовать *№*",
+                                                "Персонаж", "Статистика", "Выход"};
     private final Scanner pray = new Scanner(System.in);
 
     public InteractiveConsole(){
+        /*
+        for (int i = 0; i < 100; i++){
+            say(Monster.generateName());
+        }
+        */
+
         dislocation = Dislocation.generate(0, null);
         dislocation.setStartingPoint();
     }
@@ -59,6 +66,18 @@ public class InteractiveConsole {
                     else notDiscoveredYet();
                     break;
 
+                case "персонаж":
+                    aboutPlayer();
+                    break;
+
+                case "статистика":
+                    statistics();
+                    break;
+
+                case "выход":
+                    consoleState = 3;
+                    break;
+
                 default:
                     commandUnknown();
                     break;
@@ -84,6 +103,15 @@ public class InteractiveConsole {
 
     }
 
+    private void aboutPlayer() {
+        say("Имя: " + player.getName());
+        say("Ваши характеристики: "
+                + "сил " + player.getStrenght() + " \\ "
+                + "лов " + player.getAgility() + " \\ "
+                + "инт " + player.getIntelligence());
+        say("Здоровье: " + player.getHealth() + " \\ " + player.getMaxHealth());
+    }
+
     private void statistics() {
         say("Статистика игрока по имени " + player.getName());
         emptyLine();
@@ -102,6 +130,8 @@ public class InteractiveConsole {
         for (String str: monsters) {
             say(str + ",");
         }
+
+        emptyLine();
 
         whatIsMyMoney();
     }
@@ -125,6 +155,7 @@ public class InteractiveConsole {
     }
 
     private boolean interractWithNpc() {
+        if (dislocation.getNpc() == null) return true;
 
         if (dislocation.getNpc().isDead()){
             say("Вы нашли труп. Его имя было " + dislocation.getNpc().getName() + ".");
@@ -174,7 +205,7 @@ public class InteractiveConsole {
     }
 
     private void thereAreNoTreassure() {
-        say("Вы не нашли сокровищ.");
+        say("Вы ничего не нашли.");
     }
 
     private void takeTreassure() {
@@ -254,7 +285,7 @@ public class InteractiveConsole {
         sleep(200);
         emptyLine();
         say("Ты прибыл на новую территорию.");
-    };
+    }
 
     private void alreadyFullHealed() {
         say("Твоё здоровье и так в полном порядке, " + player.getName() + ".");
@@ -277,7 +308,7 @@ public class InteractiveConsole {
     }
 
     private void startNewGame() {
-        System.out.print("Enter your name, traveller: ");
+        System.out.print("Введите имя вашего героя: ");
         String name = pray.next();
 
         emptyLine();
@@ -286,11 +317,11 @@ public class InteractiveConsole {
         int startAgility = 10;
         int startIntelligence = 1;
 
-        System.out.println("Player \"" + name + "\" created.");
-        System.out.println("Your Stats: " + startStrenght + " \\ " + startAgility + " \\ " + startIntelligence);
-        System.out.println("Your health: " + startStrenght*6 + " \\ " + startStrenght*6);
-
         player = Player.createCharacter(name, startStrenght, startAgility, startIntelligence);
+
+        say("Игрок создан.");
+        emptyLine();
+        aboutPlayer();
 
         emptyLine();
         say("Будь аккуратнее, путник. Некоторые твои решения");
@@ -363,24 +394,29 @@ public class InteractiveConsole {
     }
 
     private void avalableMoves(){
-        say("Ваши действия:");
+        say("****Ваши действия:****");
         say(moves[0]);
         say(moves[1]);
         say(moves[2]);
         if (dislocation.isDiscovered()) say(moves[3]);
+        say("-----------------");
+        say(moves[4]);
+        say(moves[5]);
+        say(moves[6]);
+        say("**********************");
     }
 
 
 
     private void emptyLine(){
-        sleep(1000);
+        sleep(800);
         System.out.println();
     }
 
     private void say(String wordOfGod){
         for (int i = 0; i < wordOfGod.length(); i++){
             System.out.print(wordOfGod.charAt(i));
-            sleep(20);
+            sleep(12);
         }
         System.out.println();
         sleep(50);
