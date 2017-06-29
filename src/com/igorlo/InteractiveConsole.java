@@ -1,9 +1,8 @@
 package com.igorlo;
 
 import com.igorlo.Elements.Dislocation;
-import com.igorlo.Elements.NPCs.Monster;
+import com.igorlo.Elements.NotAPlayer;
 import com.igorlo.Elements.Player;
-import com.igorlo.Events.Fight;
 
 import java.util.List;
 import java.util.Scanner;
@@ -14,7 +13,7 @@ public class InteractiveConsole {
     private Dislocation dislocation;
     private short consoleState = 0;
     private final String[] moves = new String[]{"Отдохнуть", "Исследовать локацию", "Осмотреться", "Путешествовать *№*",
-                                                "Персонаж", "Статистика", "Выход"};
+                                                "Персонаж", "Статистика", "Выход", "Взаимодействовать", "Локация"};
     private final Scanner pray = new Scanner(System.in);
 
     public InteractiveConsole(){
@@ -48,7 +47,9 @@ public class InteractiveConsole {
                     else takeANap();
                     break;
 
-                case "исследовать": case "обыскать": case "искать":
+                case "исследовать":
+                case "обыскать":
+                case "искать":
                     lookForSomething();
                     break;
 
@@ -57,13 +58,21 @@ public class InteractiveConsole {
                     else variantsYouKnow();
                     break;
 
-                case "суицид": case "самоубийство": case "покончить":
+                case "суицид":
+                case "самоубийство":
+                case "покончить":
                     suicide();
                     break;
 
-                case "путешествовать": case "идти": case "бежать":
+                case "путешествовать":
+                case "идти":
+                case "бежать":
                     if (dislocation.isDiscovered()) goTo();
                     else notDiscoveredYet();
+                    break;
+
+                case "взаимодействовать":
+                    interractWithNpc();
                     break;
 
                 case "персонаж":
@@ -76,6 +85,10 @@ public class InteractiveConsole {
 
                 case "выход":
                     consoleState = 3;
+                    break;
+
+                case "локация":
+                    aboutLocation();
                     break;
 
                 default:
@@ -137,13 +150,20 @@ public class InteractiveConsole {
     }
 
     private void lookForSomething(){
-        interractWithNpc();
 
-        boolean ableToGrabDatTreassure = true;
-        if (dislocation.getNpc() instanceof Monster && dislocation.getNpc().isAlive())
-            ableToGrabDatTreassure = false;
+        if (dislocation.getNpc() == null){
+            lookForTreassure();
+        }
 
-        if (ableToGrabDatTreassure) lookForTreassure();
+        if (dislocation.getNpc() != null){
+            if (!dislocation.getNpc().isTreassureGuardian() || dislocation.getNpc().isDead())
+            lookForTreassure();
+        }
+
+        if (!dislocation.isPlayerLookedAround()){
+            interractWithNpc();
+            dislocation.playerLookedAround();
+        }
     }
 
     private void lookForTreassure() {
@@ -151,46 +171,138 @@ public class InteractiveConsole {
         if (dislocation.getTreasure() != null)
             takeTreassure();
         else
-            thereAreNoTreassure();
+            thereAreNothing();
     }
 
     private boolean interractWithNpc() {
         if (dislocation.getNpc() == null) return true;
 
-        if (dislocation.getNpc().isDead()){
-            say("Вы нашли труп. Его имя было " + dislocation.getNpc().getName() + ".");
-            say("Покойся с миром, " + dislocation.getNpc().getName() + ".");
+        NotAPlayer NPC = dislocation.getNpc();
+
+        say("***********************");
+
+        if (NPC.isDead()){
+            npcIsDead();
             return true;
         }
 
-        if (dislocation.getNpc() instanceof Monster) {
-            fightNpc();
-            return true;
+        say("Вам встретился " + dislocation.getNpc().getName() + ".");
+        NPC.setHidden(false);
+        emptyLine();
+        NPC.getDescription();
+
+        if (NPC.isAgressive()){
+            say("Этот персонаж агрессивен и напал на вас!");
+            if (NPC.isTreassureGuardian())
+                fightMonster();
+            else
+                fightNpc();
+        }
+
+        say("-------Действия:-------");
+        if (NPC.isAlive()){
+            if (NPC.hasQuest())
+                say("Задание");
+            if (NPC.isTradeable())
+                say("Торговать");
+            if (NPC.canConversate())
+                say("Говорить");
+            if (NPC.isFightable())
+                say("Напасть");
+        }
+        if (NPC.isDead()){
+            //say("Обыскать");
+        }
+        say("Осмотреть");
+        say("Уйти");
+        say("***********************");
+
+        while (NPC != null){
+            switch (pray.next().toLowerCase()) {
+                case "уйти":
+                    return true;
+                case "торговать":
+                    //TODO tradeNpc();
+                    break;
+                case "говорить":
+                    //TODO talkNpc();
+                    break;
+                case "осмотреть":
+                    lookAtNpc();
+                    break;
+                case "напасть":
+                    attackNpc();
+                    return true;
+                case "обыскать":
+                    //TODO lootNpc();
+                    break;
+                case "задание":
+                    //TODO questNpc();
+                    break;
+                default:
+                    commandUnknown_Npc();
+            }
         }
 
         return true;
-
     }
 
-    private void fightNpc() {
-        Fight encounter = new Fight(player, dislocation.getNpc());
+    private void lookAtNpc() {
+        if (dislocation.getNpc().isAlive()){
+            say("Вы осматриваете персонажа " + dislocation.getNpc().getName());
+            say(dislocation.getNpc().getDescription());
+        } else {
+            say("Это обыкновенный завонявшийся труп.");
+            say("Его имя: " + dislocation.getNpc().getName());
+        }
+    }
 
-        switch (encounter.startFighting()) {
+    private void npcIsDead() {
+        say("Вы нашли труп. Его имя было " + dislocation.getNpc().getName() + ".");
+        say("Покойся с миром, " + dislocation.getNpc().getName() + ".");
+    }
+
+    private boolean attackNpc() {
+        if (dislocation.getNpc().isDead()){
+            say("Этот бедолага и так мёртв.");
+            return true;
+        }
+        say_player("Здарова, тварина!");
+        say_Npc("Ааааа! Неси палку!");
+        say_player("Тiкай с городу");
+        say_Npc("АААА ШО ЭТО ТАКОЕ АА!1!");
+        say("*Этот персонаж запомнит это*");
+        dislocation.getNpc().setAgressive(true);
+        fightNpc();
+        return true;
+    }
+
+    private void commandUnknown_Npc() {
+        if (dislocation.getNpc().isAlive())
+            say_Npc("Я не понимаю, что ты хочешь от меня, " + player.getName());
+        else
+            say("Попробуй что-нибудь другое");
+    }
+
+    private void fightMonster() {
+        Fight fight = new Fight();
+
+        switch (fight.fight()) {
             case 1:
                 //Здесь игрок побеждает монстра и получает сокровище
                 say("Могучий " + player.getName() + " на изичах победил противника по имени " +
                         dislocation.getNpc().getName() + "!");
                 emptyLine();
-                player = encounter.getPlayer();
                 player.killedMonster(dislocation.getNpc());
                 dislocation.defeatNpc();
+                emptyLine();
+                lookForTreassure();
                 break;
             case 2:
                 //Здесь игрок смог убежать от монстра, но не победил
                 //его и не получил сокровища
                 //Монстр при этом возвращается в исхожное состояние,
                 //как будто боя и не было.
-                player = encounter.getPlayer();
                 break;
             case 3:
                 //В этом случае игрок смог избежать боя и либо обошёл монстра,
@@ -204,7 +316,35 @@ public class InteractiveConsole {
         }
     }
 
-    private void thereAreNoTreassure() {
+    private void fightNpc(){
+        Fight fight = new Fight();
+
+        switch (fight.fight()) {
+            case 1:
+                //Здесь игрок побеждает монстра и получает сокровище
+                say("Могучий " + player.getName() + " на изичах победил противника по имени " +
+                        dislocation.getNpc().getName() + "!");
+                emptyLine();
+                player.killedMonster(dislocation.getNpc());
+                dislocation.defeatNpc();
+                emptyLine();
+                break;
+            case 2:
+                //бежал
+                break;
+            case 3:
+                //мирно закончил или вроде того
+                break;
+            case 0:
+                //В данном случае игрок умер в сражении
+                //Игра заканчивается
+                player.kill();
+                consoleState = 2;
+                break;
+        }
+    }
+
+    private void thereAreNothing() {
         say("Вы ничего не нашли.");
     }
 
@@ -235,12 +375,36 @@ public class InteractiveConsole {
         say("В кошельке: " + player.getMoney());
     }
 
-    private void aboutLocation() {
+    private boolean aboutLocation() {
         emptyLine();
         say("Тип местности: " + dislocation.getName());
         emptyLine();
         say("Описание: " + dislocation.getDescription());
         dislocation.notForTheFirstTime();
+
+        if (dislocation.isPlayerLookedAround()) {
+            if (dislocation.getNpc() == null){
+                emptyLine();
+                say("В локации нет никого, кроме вас.");
+                return true;
+            } else {
+                emptyLine();
+                whoIsThere();
+                return true;
+            }
+        }
+
+        if (dislocation.getNpc() != null && !dislocation.getNpc().isHidden()){
+            emptyLine();
+            whoIsThere();
+            return true;
+        }
+
+        return true;
+    }
+
+    private void whoIsThere() {
+        say("В локации находится " + dislocation.getNpc().getName() + ".");
     }
 
     private boolean goTo() {
@@ -279,7 +443,7 @@ public class InteractiveConsole {
         emptyLine();
         say("Путешествуем...");
         for (int i = 1; i <= 10; i++){
-            sleep(1400);
+            sleep(600);
             say("Путь пройден: " + i*10 + "%");
         }
         sleep(200);
@@ -396,20 +560,26 @@ public class InteractiveConsole {
     private void avalableMoves(){
         say("****Ваши действия:****");
         say(moves[0]);
-        say(moves[1]);
+        if (!dislocation.isPlayerLookedAround())
+            say(moves[1]);
         say(moves[2]);
-        if (dislocation.isDiscovered()) say(moves[3]);
-        say("-----------------");
+        if (dislocation.isDiscovered())
+            say(moves[3]);
+        if (dislocation.getNpc() != null && !dislocation.getNpc().isHidden())
+            say(moves[7] + " (" + dislocation.getNpc().getName() + ")");
+        say("------информация------");
         say(moves[4]);
         say(moves[5]);
+        say(moves[8]);
         say(moves[6]);
+
         say("**********************");
     }
 
 
 
     private void emptyLine(){
-        sleep(800);
+        sleep(450);
         System.out.println();
     }
 
@@ -422,6 +592,14 @@ public class InteractiveConsole {
         sleep(50);
     }
 
+    private void say_Npc(String wordOfNpc){
+        say(dislocation.getNpc().getName() + ": " + wordOfNpc);
+    }
+
+    private void say_player(String wordOfPlayer){
+        say(player.getName() + ": " + wordOfPlayer);
+    }
+
     private void sleep(int time){
         try {
             Thread.sleep(time);
@@ -430,4 +608,18 @@ public class InteractiveConsole {
         }
     }
 
+
+
+    public class Fight {
+
+        public int fight(){
+            //if player wins
+            return 1;
+            //if player runs return 2;
+            //if player avoided the fight return 3;
+            //if monster wins and player is dead return 0;
+            //TODO
+        }
+
+    }
 }

@@ -22,18 +22,32 @@ public class Monster extends NotAPlayer {
                                                             "Отчисленный", "(дырявый)", "умоляющий не есть его", "сын Марии",
                                                             "святой"};
 
-    public Monster(String name, int strenght, int agility, int intelligence, int health, int maxHealth) {
-        super(name, strenght, agility, intelligence, health, maxHealth);
+    public Monster(String name, int strenght, int agility, int intelligence, int health, int maxHealth, String description) {
+        super(name, strenght, agility, intelligence, health, maxHealth, description,
+                true,
+                false,
+                true,
+                true,
+                false,
+                false,
+                true);
     }
 
     public static Monster generate(int dangerLevel) {
         if (dangerLevel == 0) return null;
         final int health = Utilities.random(5, 10)*dangerLevel;
-        return new Monster(generateName(),
+        String name = generateName();
+        String description = generateDescription(name);
+        return new Monster(name,
                 Utilities.random(1, 5) * dangerLevel,
                 Utilities.random(1, 5) * dangerLevel,
                 Utilities.random(1, 5) * dangerLevel,
-                health, health);
+                health, health,
+                description);
+    }
+
+    private static String generateDescription(String name) {
+        return "Самый обыкновенный " + name;
     }
 
     public static String generateName() {

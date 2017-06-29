@@ -15,6 +15,7 @@ public class Dislocation {
     private NotAPlayer npc;
     private final List<Dislocation> variants;
     private final Dislocation cameFrom;
+    private boolean playerLookedAround = false;
     private boolean isDiscovered = false;
     private boolean justArrived = true;
     private boolean isStartingPoint = false;
@@ -68,6 +69,10 @@ public class Dislocation {
 
     public void notForTheFirstTime(){
         justArrived = false;
+    }
+
+    public void setNpc(NotAPlayer npc) {
+        this.npc = npc;
     }
 
     public int getDangerLvl(){
@@ -174,4 +179,11 @@ public class Dislocation {
         }
     }
 
+    public void playerLookedAround(){
+        playerLookedAround = true;
+    }
+
+    public boolean isPlayerLookedAround() {
+        return playerLookedAround;
+    }
 }
