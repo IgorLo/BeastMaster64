@@ -2,6 +2,13 @@ package com.igorlo.Elements;
 
 public class Character {
 
+    //базовые константы:
+
+    //базовый шанс попадания при равной ловкости
+    private static final double BASE_HIT_CHANCE = 0.75;
+    private static final double BASE_BLOCK_CHANCE = 0.95;
+
+
     private final String name;
     private int strenght;
     private int agility;
@@ -9,6 +16,9 @@ public class Character {
     private int maxHealth;
     private int curHealth;
     private boolean isDead;
+
+    //Переменные, используемые в бою
+    private boolean isBlocked = false;
 
     public Character(String name, int strenght, int agility, int intelligence, int health, int maxHealth) {
         this.name = name;
@@ -59,7 +69,7 @@ public class Character {
         curHealth = 0;
     }
 
-    public int getToughness(){ return strenght+agility; }
+    public double getToughness(){ return 2*strenght+agility; }
 
     public boolean isHealed(){
         if (curHealth == maxHealth) return true;
@@ -70,8 +80,7 @@ public class Character {
         if (dmg < curHealth)
             curHealth -= dmg;
         else {
-            curHealth = 0;
-            isDead = true;
+            kill();
         }
     }
 
@@ -82,10 +91,55 @@ public class Character {
         }
     }
 
-    public void attack(Character character){
-        int damage = getToughness()/5;
-        if (damage > 0)
-            character.dealDamage(damage);
+    public void block(){
+        isBlocked = true;
+    }
+
+    public boolean isBlocked() {
+        return isBlocked;
+    }
+
+    public short attack(Character character, boolean isStrong){
+        double damage = getToughness()*5/character.getToughness();
+        damage *= 0.8 + Math.random()/2.5;
+
+        if (isStrong)
+            damage *= 1.6;
+
+        if (tryDodge(character, isStrong))
+            return 2;
+
+        if (character.isBlocked()) {
+            if (Math.random() < BASE_BLOCK_CHANCE) {
+                //Жертва смогла заблокировать удар
+                character.dealDamage((int) (damage/5));
+                return 3;
+            } else {
+                //Жертва попыталась и не смогла заблокировать удар
+                character.dealDamage((int) (damage * 1.3));
+                return 4;
+            }
+        }
+
+        character.dealDamage((int) damage);
+        return 1;
+    }
+
+    private boolean tryDodge(Character character, boolean isStrong) {
+        double hitChance = BASE_HIT_CHANCE;
+        double deltaAgi = Math.abs(getAgility() - character.getAgility());
+
+        if (getAgility() > character.getAgility())
+            hitChance += (deltaAgi / (100 + deltaAgi)) * 0.25;
+        if (getAgility() < character.getAgility())
+            hitChance -= (deltaAgi / (100 + deltaAgi)) * 0.6;
+
+        if (isStrong)
+            hitChance *= 0.8;
+
+        double result = Math.random();
+        if (result > hitChance) return true;
+        return false;
     }
 
 }

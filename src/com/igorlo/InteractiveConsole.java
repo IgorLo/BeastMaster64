@@ -3,12 +3,14 @@ package com.igorlo;
 import com.igorlo.Elements.Dislocation;
 import com.igorlo.Elements.NotAPlayer;
 import com.igorlo.Elements.Player;
+import com.sun.org.apache.regexp.internal.RE;
 
 import java.util.List;
 import java.util.Scanner;
 
 public class InteractiveConsole {
 
+    private final static int MAX_LINE_LENGHT = 50;
     private Player player;
     private Dislocation dislocation;
     private short consoleState = 0;
@@ -285,7 +287,7 @@ public class InteractiveConsole {
     }
 
     private void fightMonster() {
-        Fight fight = new Fight();
+        Fight fight = new Fight(player, dislocation.getNpc());
 
         switch (fight.fight()) {
             case 1:
@@ -317,7 +319,7 @@ public class InteractiveConsole {
     }
 
     private void fightNpc(){
-        Fight fight = new Fight();
+        Fight fight = new Fight(player, dislocation.getNpc());
 
         switch (fight.fight()) {
             case 1:
@@ -584,9 +586,15 @@ public class InteractiveConsole {
     }
 
     private void say(String wordOfGod){
+        int count = 0;
         for (int i = 0; i < wordOfGod.length(); i++){
             System.out.print(wordOfGod.charAt(i));
             sleep(12);
+            count++;
+            if (count > MAX_LINE_LENGHT && wordOfGod.charAt(i) == ' ') {
+                System.out.println();
+                count = 0;
+            }
         }
         System.out.println();
         sleep(50);
@@ -608,18 +616,114 @@ public class InteractiveConsole {
         }
     }
 
+    private int getChoose(){
+        String word = pray.next();
+        if (word.length() == 0) return -1;
+        for (int i = 0; i < word.length(); i++){
+            if (!Character.isDigit(word.charAt(i))) return -1;
+        }
+        return Integer.valueOf(word);
+    }
+
 
 
     public class Fight {
 
-        public int fight(){
-            //if player wins
-            return 1;
+
+        //Цены на действия
+        private final static String NOT_ENOUGH = "~~~недостаточно ОД~~~";
+        private final static short BLOCK_COST = 2;
+        private final static short STRONG_HIT_COST = 4;
+        private final static short REGULAR_HIT_COST = 2;
+
+        //Добавление ОД за успешные действия
+        private final static short SUCCESS_BLOCK_BONUS = 4;
+
+        private Player player;
+        private NotAPlayer enemy;
+
+        //Action Points
+        private int player_AP = 10;
+        private int enemy_AP = 10;
+
+        public Fight(Player player, NotAPlayer enemy) {
+            this.player = player;
+            this.enemy = enemy;
+        }
+
+        public short fight(){
+
+            startFight();
+
+            while (player.isAlive() && enemy.isAlive()) {
+                say("Ваше здоровье: " + player.HP());
+                say(enemy.getName() + ": " + enemy.HP());
+                emptyLine();
+                avalableMoves();
+
+                int choose = getChoose();
+                if ()
+
+                emptyLine();
+
+                if (player.isAlive() && enemy.isAlive()) {
+                    say("Все получают по 1 очку действий.");
+                    player_AP ++;
+                    enemy_AP ++;
+                }
+            }
+
+            if (player.isAlive())
+                player.dealDamage(10);
+                return 1;
+
+            return 0;
+
             //if player runs return 2;
             //if player avoided the fight return 3;
             //if monster wins and player is dead return 0;
             //TODO
         }
 
+        private void startFight() {
+            emptyLine();
+            say(player.getName() + ": " + player.HP());
+            say("Очки действий: " + player_AP);
+            emptyLine();
+            say(enemy.getName() + ": " + enemy.HP());
+            say("Очки действий: " + enemy_AP);
+            emptyLine();
+            say_Npc("Посмотрим, на что ты способен.");
+            say_player("Ты пожалеешь об этом.");
+            emptyLine();
+        }
+
+        private void avalableMoves(){
+            say("----Действия----");
+
+            if (player_AP >= STRONG_HIT_COST)
+                say("(1) Ударить с замахом - " + STRONG_HIT_COST + " ОД");
+            else
+                say(NOT_ENOUGH);
+
+            if (player_AP >= REGULAR_HIT_COST)
+                say("(2) Ударить - " + REGULAR_HIT_COST + " ОД");
+            else
+                say(NOT_ENOUGH);
+
+            if (player_AP >= BLOCK_COST)
+                say("(3) Блокировать - " + BLOCK_COST + " ОД");
+            else
+                say(NOT_ENOUGH);
+
+            say("(4) Бездействовать - 0 ОД");
+            say("*****");
+            say("(0) Попытаться бежать");
+
+            say("----------------");
+        }
+
+
     }
+
 }
