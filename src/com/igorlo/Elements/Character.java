@@ -95,6 +95,10 @@ public class Character {
         isBlocked = true;
     }
 
+    public void unBlock() {
+        isBlocked = false;
+    }
+
     public boolean isBlocked() {
         return isBlocked;
     }

@@ -14,6 +14,7 @@ public class Dislocation {
     private Treasure treasure;
     private NotAPlayer npc;
     private final List<Dislocation> variants;
+    private final List<Interactible> interactibles;
     private final Dislocation cameFrom;
     private boolean playerLookedAround = false;
     private boolean isDiscovered = false;
@@ -22,10 +23,11 @@ public class Dislocation {
 
     public Dislocation(DislocationType type, Treasure treasure,
                        Monster monster, List<Dislocation> variants,
-                       Dislocation cameFrom) {
+                       List<Interactible> interactibles, Dislocation cameFrom) {
         this.type = type;
         this.treasure = treasure;
         this.variants = variants;
+        this.interactibles = interactibles;
         this.npc = monster;
         this.cameFrom = cameFrom;
     }
@@ -39,8 +41,13 @@ public class Dislocation {
         List<Dislocation> variants = new ArrayList<>();
         Monster monster = Monster.generate(type.dangerLevel);
 
-        return new Dislocation(type, treasure, monster, variants, cameFrom);
+        List<Interactible> interactibles = new ArrayList<>();
+        interactibles.add(Interactible.generate());
+
+        return new Dislocation(type, treasure, monster, variants, interactibles, cameFrom);
     }
+
+
 
     private static DislocationType randomType(){
         final int randomIndex = Utilities.random(0, 2);
@@ -185,5 +192,9 @@ public class Dislocation {
 
     public boolean isPlayerLookedAround() {
         return playerLookedAround;
+    }
+
+    public List<Interactible> getInteractibles() {
+        return interactibles;
     }
 }

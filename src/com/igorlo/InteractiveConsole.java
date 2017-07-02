@@ -1,6 +1,7 @@
 package com.igorlo;
 
 import com.igorlo.Elements.Dislocation;
+import com.igorlo.Elements.Interactible;
 import com.igorlo.Elements.NotAPlayer;
 import com.igorlo.Elements.Player;
 import com.sun.org.apache.regexp.internal.RE;
@@ -10,13 +11,24 @@ import java.util.Scanner;
 
 public class InteractiveConsole {
 
-    private final static int MAX_LINE_LENGHT = 50;
+    private final static int MAX_LINE_LENGHT = 70;
     private Player player;
     private Dislocation dislocation;
     private short consoleState = 0;
     private final String[] moves = new String[]{"Отдохнуть", "Исследовать локацию", "Осмотреться", "Путешествовать *№*",
-                                                "Персонаж", "Статистика", "Выход", "Взаимодействовать", "Локация"};
+                                                "Персонаж", "Статистика", "Выход", "Взаимодействовать", "Локация", "Объект"};
     private final Scanner pray = new Scanner(System.in);
+
+    private void debug(){
+        /*
+        for (Interactible interactible: Interactible.allInteractibles()) {
+            say("Name: " + interactible.getName());
+            say("Desc: " + interactible.getText());
+        }
+        */
+
+        /*pray.next();*/
+    }
 
     public InteractiveConsole(){
         /*
@@ -77,6 +89,10 @@ public class InteractiveConsole {
                     interractWithNpc();
                     break;
 
+                case "объект":
+                    interractWithObject();
+                    break;
+
                 case "персонаж":
                     aboutPlayer();
                     break;
@@ -116,6 +132,10 @@ public class InteractiveConsole {
         }
 
 
+    }
+
+    private void interractWithObject() {
+        say(dislocation.getInteractibles().get(0).getText());
     }
 
     private void aboutPlayer() {
@@ -382,6 +402,11 @@ public class InteractiveConsole {
         say("Тип местности: " + dislocation.getName());
         emptyLine();
         say("Описание: " + dislocation.getDescription());
+        emptyLine();
+        for (Interactible interactible: dislocation.getInteractibles()) {
+            say("Здесь находится " + interactible.getName());
+        }
+
         dislocation.notForTheFirstTime();
 
         if (dislocation.isPlayerLookedAround()) {
@@ -474,7 +499,10 @@ public class InteractiveConsole {
     }
 
     private void startNewGame() {
-        System.out.print("Введите имя вашего героя: ");
+
+        debug();
+
+        say("Введите имя вашего героя: ");
         String name = pray.next();
 
         emptyLine();
@@ -569,6 +597,7 @@ public class InteractiveConsole {
             say(moves[3]);
         if (dislocation.getNpc() != null && !dislocation.getNpc().isHidden())
             say(moves[7] + " (" + dislocation.getNpc().getName() + ")");
+        say(moves[9]);
         say("------информация------");
         say(moves[4]);
         say(moves[5]);
@@ -591,6 +620,7 @@ public class InteractiveConsole {
             System.out.print(wordOfGod.charAt(i));
             sleep(12);
             count++;
+            if (wordOfGod.charAt(i) == '.') sleep(50);
             if (count > MAX_LINE_LENGHT && wordOfGod.charAt(i) == ' ') {
                 System.out.println();
                 count = 0;
@@ -636,8 +666,16 @@ public class InteractiveConsole {
         private final static short STRONG_HIT_COST = 4;
         private final static short REGULAR_HIT_COST = 2;
 
+        //Штрафы за неудачные действия
+        private final static short STRONG_HIT_BLOCKED = 2;
+        private final static short STRONG_HIT_DODGED = 1;
+
+        private final static short REGULAR_HIT_BLOCKED = 1;
+
+        private final static short BLOCK_FAILED = 1;
+
         //Добавление ОД за успешные действия
-        private final static short SUCCESS_BLOCK_BONUS = 4;
+        private final static short BLOCK_SUCCESS = 4;
 
         private Player player;
         private NotAPlayer enemy;
@@ -656,13 +694,24 @@ public class InteractiveConsole {
             startFight();
 
             while (player.isAlive() && enemy.isAlive()) {
+
+                player.unBlock();
+                enemy.unBlock();
+
                 say("Ваше здоровье: " + player.HP());
                 say(enemy.getName() + ": " + enemy.HP());
                 emptyLine();
                 avalableMoves();
 
-                int choose = getChoose();
-                if ()
+                short resultOfMove = playerTurn();
+
+                while (resultOfMove == 0) {
+                    unknownMove();
+                    resultOfMove = playerTurn();
+                }
+
+                //player runs away
+                if (resultOfMove == 2) return 2;
 
                 emptyLine();
 
@@ -673,27 +722,182 @@ public class InteractiveConsole {
                 }
             }
 
-            if (player.isAlive())
+            if (player.isAlive() && enemy.isDead()) {
+                //player killed enemy
                 player.dealDamage(10);
                 return 1;
+            }
 
+            //player died and enemy is alive
             return 0;
 
             //if player runs return 2;
             //if player avoided the fight return 3;
-            //if monster wins and player is dead return 0;
-            //TODO
         }
+
+        private short playerTurn() {
+            int choose = getChoose();
+
+            boolean madeMove = true;
+            boolean playerRunAway = false;
+
+            switch (choose){
+                case 1:
+                    madeMove = strongHit();
+                    break;
+                case 2:
+                    madeMove = regularHit();
+                    break;
+                case 3:
+                    madeMove = block();
+                    break;
+                case 4:
+                    charge();
+                    break;
+                case 0:
+                    playerRunAway = runAway();
+                    break;
+                default:
+                    madeMove = false;
+                    break;
+            }
+            if (playerRunAway) return 2;
+            if (madeMove) return 1;
+            return 0;
+        }
+
+
+        //действия, которые можно выбрать во время боя.
+        private boolean runAway() {
+            //TODO нужно сделать проверку на возможность игрока сбежать.
+            // пока что игрок просто всегда сбегает
+            return true;
+        }
+
+        private boolean charge() {
+            say("Вы ничего не предпринимаете и просто ждёте удачного момента, чтобы " +
+                    "вернуться к активным действиям.");
+            say("Вы получаете одно Очко Действий и немного Очков Здоровья.");
+            player_AP++;
+            player.heal(Utilities.random(1, 3));
+            return true;
+        }
+
+        private boolean block() {
+            if (player_AP < BLOCK_COST) {
+                say("У вас недостаточно ОД для данного движения.");
+                return false;
+            }
+
+            player_AP -= BLOCK_COST;
+
+            say("Вы готовитесь заблокировать удар противника.");
+
+            player.block();
+            return true;
+        }
+
+        private boolean strongHit() {
+
+            if (player_AP < STRONG_HIT_COST) {
+                say("У вас недостаточно ОД для данного движения.");
+                return false;
+            }
+
+            player_AP -= STRONG_HIT_COST;
+
+            say("Вы пытаетесь попасть по противнику ударом с замахом.");
+            emptyLine();
+            int result = player.attack(enemy, true);
+
+            switch (result) {
+                case 1:
+                    say("Противник пытался увернуться, но ваша тяжёлая атака всё " +
+                            "равно настигла его и нанесла значительное количество урона.");
+                    break;
+
+                case 2:
+                    say("Противник смог увернуться от вашей атаки. Ваш меч попадает " +
+                            "по лежавшему рядом камню, из-за чего по вашим рукам проходит силь" +
+                            "ная вибрация. Вы слегка сбиты с толку.");
+                    player_AP -= STRONG_HIT_DODGED;
+                    break;
+
+                case 3:
+                    say("Противник заблокировал вашу атаку. Ваш меч буквально отпружинил от " +
+                            "щита противника в момент попадания. Вы сбиты с толку.");
+                    player_AP -= STRONG_HIT_BLOCKED;
+                    enemy_AP += BLOCK_SUCCESS;
+                    break;
+
+                case 4:
+                    say("Противник пытался заблокировать вашу атаку, но вы ловко пробиваете " +
+                            "его защиту наносите сильнейший удар. Противник немного сбит с толку.");
+                    player_AP ++;
+                    enemy_AP -= BLOCK_FAILED;
+            }
+
+            return true;
+        }
+
+        private boolean regularHit() {
+
+            if (player_AP < REGULAR_HIT_COST) {
+                say("У вас недостаточно ОД для данного движения.");
+                return false;
+            }
+
+            player_AP -= REGULAR_HIT_COST;
+
+            say("Вы пытаетесь попасть по противнику обычным ударом.");
+            emptyLine();
+            int result = player.attack(enemy, false);
+
+            switch (result) {
+                case 1:
+                    say("Вы попали по противнику и нанесли ему некотороый урон.");
+                    break;
+
+                case 2:
+                    say("Противник смог увернуться от вашей атаки.");
+                    break;
+
+                case 3:
+                    say("Противник заблокировал вашу атаку.");
+                    player_AP -= REGULAR_HIT_BLOCKED;
+                    enemy_AP += BLOCK_SUCCESS;
+                    break;
+
+                case 4:
+                    say("Противник пытался заблокировать вашу атаку, но вы ловко пробиваете " +
+                            "его защиту и наносите некоторый урон.");
+                    player_AP ++;
+                    enemy_AP -= BLOCK_FAILED;
+            }
+
+            return true;
+        }
+
+
+
+        private void unknownMove() {
+            say("Попробуйте ввести другую цифру.");
+        }
+
+
 
         private void startFight() {
             emptyLine();
             say(player.getName() + ": " + player.HP());
             say("Очки действий: " + player_AP);
+            sleep(200);
             emptyLine();
             say(enemy.getName() + ": " + enemy.HP());
             say("Очки действий: " + enemy_AP);
+            sleep(200);
             emptyLine();
             say_Npc("Посмотрим, на что ты способен.");
+            sleep(200);
             say_player("Ты пожалеешь об этом.");
             emptyLine();
         }
