@@ -1,9 +1,9 @@
 package com.igorlo.Elements.NPCs;
 
-import com.igorlo.Elements.NotAPlayer;
+import com.igorlo.Elements.NotPlayableCharacter;
 import com.igorlo.Utilities;
 
-public class Monster extends NotAPlayer {
+public class Monster extends NotPlayableCharacter {
 
     private static final String[] FIRSTNAME_FIRSTHALF = new String[]{"Ветро", "Древо", "Пещеро", "Стале", "Пиво",
                                                                     "Велико", "Старо", "Дубо", "Камне", "Чиче", "Михо",

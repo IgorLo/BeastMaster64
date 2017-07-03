@@ -1,8 +1,5 @@
 package com.igorlo;
 
-import com.igorlo.Elements.Interactible;
-
-import java.util.List;
 import java.util.Random;
 
 public class Utilities {

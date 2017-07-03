@@ -53,7 +53,7 @@ public class Player extends Character {
         addMoney(treasure.getMoney());
     }
 
-    public void killedMonster(NotAPlayer monster){
+    public void killedMonster(NotPlayableCharacter monster){
         defeatedMonsters.add(monster.getName());
     }
 

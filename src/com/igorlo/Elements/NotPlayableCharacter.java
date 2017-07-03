@@ -1,6 +1,6 @@
 package com.igorlo.Elements;
 
-public class NotAPlayer extends Character {
+public class NotPlayableCharacter extends Character {
 
     private String description;
     private boolean isAgressive;
@@ -12,12 +12,12 @@ public class NotAPlayer extends Character {
     private boolean isHidden;
     private boolean isInteractable = true;
 
-    public NotAPlayer(String name, int strenght, int agility,
-                      int intelligence, int health, int maxHealth,
-                      String description, boolean isAgressive,
-                      boolean canConversate, boolean isTreassureGuardian,
-                      boolean isFightable, boolean isTradeable,
-                      boolean hasQuest, boolean isHidden) {
+    public NotPlayableCharacter(String name, int strenght, int agility,
+                                int intelligence, int health, int maxHealth,
+                                String description, boolean isAgressive,
+                                boolean canConversate, boolean isTreassureGuardian,
+                                boolean isFightable, boolean isTradeable,
+                                boolean hasQuest, boolean isHidden) {
         super(name, strenght, agility, intelligence, health, maxHealth);
         this.description = description;
         this.isAgressive = isAgressive;

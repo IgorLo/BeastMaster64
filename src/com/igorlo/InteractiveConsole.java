@@ -1,17 +1,19 @@
 package com.igorlo;
 
 import com.igorlo.Elements.Dislocation;
-import com.igorlo.Elements.Interactible;
-import com.igorlo.Elements.NotAPlayer;
+import com.igorlo.Elements.Interactable;
+import com.igorlo.Elements.NotPlayableCharacter;
 import com.igorlo.Elements.Player;
-import com.sun.org.apache.regexp.internal.RE;
 
 import java.util.List;
 import java.util.Scanner;
 
+import static com.igorlo.Config.*;
+
 public class InteractiveConsole {
 
-    private final static int MAX_LINE_LENGHT = 70;
+
+
     private Player player;
     private Dislocation dislocation;
     private short consoleState = 0;
@@ -19,15 +21,23 @@ public class InteractiveConsole {
                                                 "Персонаж", "Статистика", "Выход", "Взаимодействовать", "Локация", "Объект"};
     private final Scanner pray = new Scanner(System.in);
 
-    private void debug(){
-        /*
-        for (Interactible interactible: Interactible.allInteractibles()) {
-            say("Name: " + interactible.getName());
-            say("Desc: " + interactible.getText());
-        }
-        */
+    private boolean debug(){
 
-        /*pray.next();*/
+        //Метод для отладки, проверки чего либо
+
+        if (!DEBUG) return true;
+
+        for (Interactable interactable: Interactable.allInteractables()) {
+            say("Name: " + interactable.getName());
+            say("Desc: " + interactable.getText());
+            say("isUniq: " + interactable.isUniq());
+            say("-----");
+        }
+
+        //Программа ждёт, пока игрок введёт что-либо
+        pray.next();
+
+        return true;
     }
 
     public InteractiveConsole(){
@@ -135,7 +145,10 @@ public class InteractiveConsole {
     }
 
     private void interractWithObject() {
-        say(dislocation.getInteractibles().get(0).getText());
+        if (!dislocation.getInteractables().isEmpty())
+            say_player(dislocation.getInteractables().get(0).getText());
+        else
+            say("Кажется, здесь нет ничего интересного.");
     }
 
     private void aboutPlayer() {
@@ -199,7 +212,7 @@ public class InteractiveConsole {
     private boolean interractWithNpc() {
         if (dislocation.getNpc() == null) return true;
 
-        NotAPlayer NPC = dislocation.getNpc();
+        NotPlayableCharacter NPC = dislocation.getNpc();
 
         say("***********************");
 
@@ -403,8 +416,8 @@ public class InteractiveConsole {
         emptyLine();
         say("Описание: " + dislocation.getDescription());
         emptyLine();
-        for (Interactible interactible: dislocation.getInteractibles()) {
-            say("Здесь находится " + interactible.getName());
+        for (Interactable interactable : dislocation.getInteractables()) {
+            say("Здесь находится " + interactable.getName());
         }
 
         dislocation.notForTheFirstTime();
@@ -597,7 +610,8 @@ public class InteractiveConsole {
             say(moves[3]);
         if (dislocation.getNpc() != null && !dislocation.getNpc().isHidden())
             say(moves[7] + " (" + dislocation.getNpc().getName() + ")");
-        say(moves[9]);
+        if (!dislocation.getInteractables().isEmpty())
+            say(moves[9]);
         say("------информация------");
         say(moves[4]);
         say(moves[5]);
@@ -638,9 +652,9 @@ public class InteractiveConsole {
         say(player.getName() + ": " + wordOfPlayer);
     }
 
-    private void sleep(int time){
+    private static void sleep(int time){
         try {
-            Thread.sleep(time);
+            Thread.sleep((int) (time / GAME_SPEED));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -678,13 +692,13 @@ public class InteractiveConsole {
         private final static short BLOCK_SUCCESS = 4;
 
         private Player player;
-        private NotAPlayer enemy;
+        private NotPlayableCharacter enemy;
 
         //Action Points
         private int player_AP = 10;
         private int enemy_AP = 10;
 
-        public Fight(Player player, NotAPlayer enemy) {
+        public Fight(Player player, NotPlayableCharacter enemy) {
             this.player = player;
             this.enemy = enemy;
         }
